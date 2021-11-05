@@ -49,7 +49,7 @@ public class ScriptDao extends BaseDao<Script> {
     private static final Logger LOG = LogManager.getLogger(ScriptDao.class);
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public ScriptDao() {
         super();
@@ -58,7 +58,7 @@ public class ScriptDao extends BaseDao<Script> {
 
     /**
      * @param id
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public Script findById(Integer id) {
@@ -70,14 +70,14 @@ public class ScriptDao extends BaseDao<Script> {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public Script getScript(Integer id) {
         return super.findById(id);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public void delete(Integer id) throws HibernateException {
@@ -162,7 +162,7 @@ public class ScriptDao extends BaseDao<Script> {
 
     /**
      * 
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public Script saveOrUpdate(Script script) {
@@ -189,6 +189,7 @@ public class ScriptDao extends BaseDao<Script> {
             LOG.debug("Saved Script Steps with id " + savedSerializedStep.getId() + " for script " + script.getId());
             commit();
         } catch (Exception e) {
+            LOG.error("Error saving script " + script.getName() + " Exception: " + e.toString());
         	rollback();
             e.printStackTrace();
             throw new RuntimeException(e);

@@ -87,7 +87,7 @@ public class AgentWatchdog implements Runnable {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -97,12 +97,12 @@ public class AgentWatchdog implements Runnable {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public void run() {
         LOG.info("Starting WatchDog: " + this.toString());
-        AWSXRay.beginDummySegment(); //jdbcInterceptor will throw SegmentNotFoundException,RuntimeException without this
+        AWSXRay.getGlobalRecorder().beginNoOpSegment(); //jdbcInterceptor will throw SegmentNotFoundException,RuntimeException without this
         try {
             List<VMInformation> instances = new ArrayList<VMInformation>(vmInfo);
             while (rebootCount <= maxRestarts && restartCount <= maxRestarts && !stopped) {

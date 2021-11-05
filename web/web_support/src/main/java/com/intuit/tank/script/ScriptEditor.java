@@ -16,7 +16,6 @@ package com.intuit.tank.script;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +30,7 @@ import javax.inject.Named;
 
 import com.amazonaws.xray.AWSXRay;
 import com.amazonaws.xray.entities.Subsegment;
+import com.intuit.tank.auth.TankSecurityContext;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,9 +38,6 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 import com.intuit.tank.util.Messages;
-import org.picketlink.Identity;
-import org.picketlink.idm.IdentityManager;
-import org.picketlink.idm.model.basic.User;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -109,10 +106,7 @@ public class ScriptEditor implements Serializable {
     private LogicStepEditor logicStepEditor;
 
     @Inject
-    private Identity identity;
-    
-    @Inject
-    private IdentityManager identityManager;
+    private TankSecurityContext securityContext;
     
     @Inject
     private Security security;
@@ -269,7 +263,9 @@ public class ScriptEditor implements Serializable {
      * @param scpt
      */
     public String editScript(Script scpt) {
-        conversation.begin();
+        if (conversation != null && conversation.isTransient()) {
+            conversation.begin();
+        }
         AWSXRay.createSubsegment("Open.Script." + scpt.getName(), (subsegment) -> {
             subsegment.putAnnotation("script", scpt.getName());
             this.script = new ScriptDao().findById(scpt.getId());
@@ -519,7 +515,7 @@ public class ScriptEditor implements Serializable {
                 save();
             } else {
                 Script copyScript = ScriptUtil.copyScript(
-                		identityManager.lookupById(User.class, identity.getAccount().getId()).getLoginName()
+                		securityContext.getCallerPrincipal().getName()
                 		, saveAsName, script);
                 copyScript = new ScriptDao().saveOrUpdate(copyScript);
                 scriptEvent.fire(new ModifiedScriptMessage(copyScript, this));
@@ -541,7 +537,6 @@ public class ScriptEditor implements Serializable {
         steps.add(getInsertIndex(), thinkTimeScriptStep);
         minThinkTime = "";
         maxThinkTime = "";
-        reindexScriptSteps();
     }
 
     /**
@@ -552,7 +547,6 @@ public class ScriptEditor implements Serializable {
                 .createSleepTime(getSleepTime());
         steps.add(getInsertIndex(), sleepTimeScriptStep);
         sleepTime = "";
-        reindexScriptSteps();
     }
 
     /**
@@ -564,7 +558,6 @@ public class ScriptEditor implements Serializable {
         steps.add(getInsertIndex(), variableStep);
         variableKey = "";
         variableValue = "";
-        reindexScriptSteps();
     }
 
     /**
@@ -590,7 +583,14 @@ public class ScriptEditor implements Serializable {
         }
         steps.remove(step);
         searchBean.removeFromSearchMatch(step);
-        reindexScriptSteps();
+
+        // for all steps: when the current step index is greater than deleted steps' index
+        // shift all step indexes down by one
+        for (ScriptStep sstep : steps) {
+            if (sstep.getStepIndex() > step.getStepIndex()) {
+                sstep.setStepIndex(sstep.getStepIndex() - 1);
+            }
+        }
     }
 
     /**
@@ -767,7 +767,7 @@ public class ScriptEditor implements Serializable {
         ScriptUtil.updateStepLabel(step);
         this.steps.add(getInsertIndex(), step);
         clearOrderList();
-        reindexScriptSteps();
+        step.setStepIndex(this.steps.size());
     }
 
     private int getInsertIndex() {
@@ -784,7 +784,7 @@ public class ScriptEditor implements Serializable {
         ScriptUtil.updateStepLabel(step);
         steps.add(index, step);
         clearOrderList();
-        reindexScriptSteps();
+        step.setStepIndex(index);
     }
 
     /**

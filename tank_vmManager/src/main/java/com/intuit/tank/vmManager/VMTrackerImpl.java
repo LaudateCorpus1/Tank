@@ -110,7 +110,7 @@ public class VMTrackerImpl implements VMTracker {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public CloudVmStatus getStatus(@Nonnull String instanceId) {
@@ -122,7 +122,7 @@ public class VMTrackerImpl implements VMTracker {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public void publishEvent(JobEvent event) {
@@ -134,13 +134,13 @@ public class VMTrackerImpl implements VMTracker {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public void setStatus(@Nonnull final CloudVmStatus status) {
         Runnable task = () -> {
             // setTraceEntity caused AlreadyEmittedException: Segment qa-tank.perf.a.intuit.com has already been emitted
-            AWSXRay.beginDummySegment(); //jdbcInterceptor will throw SegmentNotFoundException,RuntimeException without this
+            AWSXRay.getGlobalRecorder().beginNoOpSegment(); //jdbcInterceptor will throw SegmentNotFoundException,RuntimeException without this
             setStatusThread(status);
             AWSXRay.endSegment();
         };
@@ -242,7 +242,7 @@ public class VMTrackerImpl implements VMTracker {
 
     /**
      * 
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public void removeStatusForInstance(String instanceId) {
@@ -251,7 +251,7 @@ public class VMTrackerImpl implements VMTracker {
 
     /**
      * 
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public void removeStatusForJob(String jobId) {
@@ -265,7 +265,7 @@ public class VMTrackerImpl implements VMTracker {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public CloudVmStatusContainer getVmStatusForJob(String jobId) {
@@ -273,7 +273,7 @@ public class VMTrackerImpl implements VMTracker {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public boolean isDevMode() {
@@ -281,7 +281,7 @@ public class VMTrackerImpl implements VMTracker {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public Set<CloudVmStatusContainer> getAllJobs() {
